@@ -73,6 +73,7 @@ public class CourseModel {
 		}else{
 			try {
 			conn=JDBCDataSource.getConnection();
+			conn.setAutoCommit(false);
 			PreparedStatement pstmt=conn.prepareStatement("insert into st_course values(?,?,?,?,?,?,?)");
 			pk=nextPK();
 			pstmt.setLong(1, pk);
@@ -84,6 +85,8 @@ public class CourseModel {
 			pstmt.setTimestamp(7, bean.getModifiedDatetime());
 			
 			pstmt.executeUpdate();
+			conn.commit();
+			conn.close();
 			System.out.println("Course Added");
 			CourseBean beanadd=model.findByPk(pk);
 			if(beanadd!=null){
@@ -94,7 +97,14 @@ public class CourseModel {
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			try {
+                conn.rollback();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                throw new ApplicationException("Exception : add rollback exception " + ex.getMessage());
+            }
+            throw new ApplicationException( "Exception : Exception in add College");
+        
 		}finally {
 			JDBCDataSource.closeConnection(conn);
 		
@@ -113,22 +123,32 @@ public class CourseModel {
 	 * Delete.
 	 *
 	 * @param bean the bean
+	 * @throws ApplicationException 
 	 */
-	public void delete(CourseBean bean) {
+	public void delete(CourseBean bean) throws ApplicationException {
 		Connection conn = null;
 
-		try {
+		try {conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement("delete from st_course where ID=?");
 			pstmt.setLong(1, bean.getId());
 			pstmt.executeUpdate();
 
 			System.out.println("user deleted");
+			conn.commit();
 			pstmt.close();
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+		
 		} finally {
 			JDBCDataSource.closeConnection(conn);
 		}
@@ -228,14 +248,16 @@ public class CourseModel {
  * Update.
  *
  * @param bean the bean
+ * @throws ApplicationException 
  */
-public void update(CourseBean bean){
+public void update(CourseBean bean) throws ApplicationException{
 	log.debug("courseModel update started");
 	Connection conn=null;
 	PreparedStatement pstmt=null;
 	
 	StringBuffer sql=new StringBuffer("update st_course set COURSE_NAME=?,DESCRIPTION=?,CREATED_BY=?,MODIFIED_BY=?,CREATED_DATETIME=?,MODIFIED_DATETIME=? where ID=?");
 	 try {
+			conn.setAutoCommit(false);
 		conn= JDBCDataSource.getConnection();
 		pstmt=conn.prepareStatement(sql.toString());
 		pstmt.setString(1, bean.getCourseName());
@@ -246,10 +268,19 @@ public void update(CourseBean bean){
 		pstmt.setTimestamp(6, bean.getModifiedDatetime());
 		pstmt.setLong(7, bean.getId());
 		pstmt.executeUpdate();
+		conn.commit();
+		conn.close();
 		System.out.println("courseModel Updated");
 	} catch (Exception e) {
-		// TODO Auto-generated catch block
-		e.printStackTrace();
+		 try {
+             conn.rollback();
+         } catch (Exception ex) {
+             ex.printStackTrace();
+             throw new ApplicationException(
+                     "Exception : add rollback exception " + ex.getMessage());
+         }
+         throw new ApplicationException("Exception : Exception in add User");
+	
 	}finally {
 		JDBCDataSource.closeConnection(conn);
 	}

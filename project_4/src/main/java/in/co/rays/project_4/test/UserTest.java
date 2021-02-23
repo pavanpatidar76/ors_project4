@@ -82,8 +82,9 @@ public class UserTest {
 
 	/**
 	 * Test delete.
+	 * @throws ApplicationException 
 	 */
-	public static void testDelete() {
+	public static void testDelete() throws ApplicationException {
 		UserBean bean = new UserBean();
 		long pk = 3L;
 		bean.setId(pk);
@@ -129,6 +130,9 @@ public class UserTest {
 			UserModel model = new UserModel();
 			model.update(bean);
 		} catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}

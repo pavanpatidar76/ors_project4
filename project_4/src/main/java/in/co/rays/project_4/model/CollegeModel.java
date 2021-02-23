@@ -165,10 +165,12 @@ public class CollegeModel {
 	 * Update.
 	 *
 	 * @param bean the bean
+	 * @throws ApplicationException 
 	 */
-	public static void update(CollegeBean bean) {
+	public static void update(CollegeBean bean) throws ApplicationException {
 		Connection conn = null;
 		try {
+			conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement("update st_college set NAME=?,ADDRESS=?,STATE=?,CITY=?,PHONE_NO=?,CREATED_BY=?,MODIFIED_BY=?,CREATED_DATETIME=?,MIDIFIED_DATETIME=?  where ID=?");
 			pstmt.setString(1, bean.getName());
@@ -182,11 +184,19 @@ public class CollegeModel {
             pstmt.setTimestamp(9, bean.getModifiedDatetime());
             pstmt.setLong(10,bean.getId());
 			pstmt.executeUpdate();
+			conn.commit();
+			conn.close();
 			System.out.println("college updated");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
+			try {
+                conn.rollback();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                throw new ApplicationException("Exception : add rollback exception " + ex.getMessage());
+            }
+            throw new ApplicationException( "Exception : Exception in add College");
+        } finally {
 			JDBCDataSource.closeConnection(conn);
 		}
 	}

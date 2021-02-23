@@ -1,6 +1,7 @@
 package in.co.rays.project_4.controller;
 
 import java.io.IOException;
+import java.sql.SQLException;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -152,11 +153,21 @@ public class RoleCtl extends BaseCtl{
 
 	            try {
 	                if (id > 0) {
-	                    model.update(bean);
+	                    try {
+							model.update(bean);
+						} catch (SQLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 	                    ServletUtility.setBean(bean, request);
 		                ServletUtility.setSuccessMessage("Data is successfully Updated",request);
 	                } else {
-	                    long pk = model.add(bean);
+	                    try {
+							long pk = model.add(bean);
+						} catch (SQLException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
 	                   // bean.setId(pk);
 	                    ServletUtility.setBean(bean, request);
 		                ServletUtility.setSuccessMessage("Data is successfully saved",request);

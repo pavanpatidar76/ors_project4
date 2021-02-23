@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import in.co.rays.project_4.bean.FacultyBean;
+import in.co.rays.project_4.exception.ApplicationException;
 import in.co.rays.project_4.exception.DuplicateRecordsException;
 import in.co.rays.project_4.model.FacultyModel;
 
@@ -66,7 +67,18 @@ public class FacultyModelTest {
         bean.setModifiedDatetime(null);
         
         FacultyModel model= new FacultyModel();
-        model.add(bean);
+        try {
+			model.add(bean);
+		} catch (DuplicateRecordsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
         
 		
 		
@@ -75,8 +87,9 @@ public class FacultyModelTest {
 	
 	/**
 	 * Test delete.
+	 * @throws ApplicationException 
 	 */
-	public static void testDelete(){
+	public static void testDelete() throws ApplicationException{
 		FacultyBean bean= new FacultyBean();
 		bean.setId(1L);
 		
@@ -117,7 +130,12 @@ public class FacultyModelTest {
         bean.setModifiedDatetime(null);
         
         FacultyModel model=new FacultyModel();
-        model.update(bean);
+        try {
+			model.update(bean);
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 	

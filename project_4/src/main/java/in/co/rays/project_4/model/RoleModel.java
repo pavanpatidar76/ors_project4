@@ -8,20 +8,19 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
-import com.sun.javafx.scene.web.Debugger;
-
-import in.co.rays.project_4.bean.RoleBean;
+import in.co.rays.project_4.bean.MarksheetBean;
+import in.co.rays.project_4.bean.StudentBean;
 import in.co.rays.project_4.exception.ApplicationException;
 import in.co.rays.project_4.exception.DuplicateRecordsException;
 import in.co.rays.project_4.util.JDBCDataSource;
 
 /**
- * The Class RoleModel.
+ * The Class MarksheetModel.
  */
-public class RoleModel {
-	 
- 	/** The log. */
- 	private static Logger log = Logger.getLogger(RoleModel.class);
+public class MarksheetModel {
+	
+	 /** The log. */
+ 	Logger log = Logger.getLogger(MarksheetModel.class);
 	
 	/**
 	 * Next PK.
@@ -29,11 +28,11 @@ public class RoleModel {
 	 * @return the integer
 	 */
 	public Integer nextPK() {
-		Connection conn = null;
+		Connection conn;
 		int pk = 0;
 		try {
 			conn = JDBCDataSource.getConnection();
-			PreparedStatement pstmt = conn.prepareStatement("select max(ID)from st_role");
+			PreparedStatement pstmt = conn.prepareStatement("select max(ID) from st_marksheet");
 			ResultSet rs = pstmt.executeQuery();
 			while (rs.next()) {
 				pk = rs.getInt(1);
@@ -42,11 +41,8 @@ public class RoleModel {
 		} catch (Exception e) {
 
 			e.printStackTrace();
-		} finally {
-			JDBCDataSource.closeConnection(conn);
 		}
 		return pk + 1;
-
 	}
 
 	/**
@@ -54,48 +50,62 @@ public class RoleModel {
 	 *
 	 * @param bean the bean
 	 * @return the long
-	 * @throws DuplicateRecordsException the duplicate records exception
 	 * @throws ApplicationException the application exception
+	 * @throws DuplicateRecordsException the duplicate records exception
 	 */
-	public long add(RoleBean bean) throws DuplicateRecordsException, ApplicationException {
-		Connection conn = null;
+	public long add(MarksheetBean bean) throws ApplicationException, DuplicateRecordsException {
+		
+	Connection conn = null;
 		int pk = 0;
 		
-		 RoleBean duplicataRole = findByName(bean.getName());
-	        // Check if create Role already exist
-	        if (duplicataRole != null) {
-	            throw new DuplicateRecordsException("Role already exists");
-	        }
-	        
+		StudentModel smodel=new StudentModel();
+		StudentBean sbean=smodel.findByPK(bean.getStudentId());
+		System.out.println(bean.getStudentId());
+		System.out.println("MarksheetModel: "+sbean);
+		bean.setName(sbean.getFirstName()+" "+sbean.getLastName());
+		
+		MarksheetBean duplicateMarksheet = findByRollNo(bean.getRollNo());
+       
+
+        if (duplicateMarksheet != null) {
+            throw new DuplicateRecordsException("Roll Number already exists");
+        }
+		
 		try {
+			conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
-			PreparedStatement pstmt = conn.prepareStatement("insert into st_role value(?,?,?,?,?,?,?)");
+			PreparedStatement pstmt = conn.prepareStatement("insert into st_marksheet values(?,?,?,?,?,?,?,?,?,?,?)");
 			pk = nextPK();
-			pstmt.setInt(1, pk);
-			pstmt.setString(2, bean.getName());
-			pstmt.setString(3, bean.getDescription());
-			pstmt.setString(4, bean.getCreatedBy());
-			pstmt.setString(5, bean.getModifiedBy());
-			pstmt.setTimestamp(6, bean.getCreatedDatetime());
-			pstmt.setTimestamp(7, bean.getModifiedDatetime());
+			pstmt.setLong(1, pk);
+			pstmt.setString(2, bean.getRollNo());
+			pstmt.setLong(3, bean.getStudentId());
+			pstmt.setString(4, bean.getName());
+			pstmt.setInt(5, bean.getPhysics());
+			pstmt.setInt(6, bean.getChemistry());
+			pstmt.setInt(7, bean.getMaths());
+			pstmt.setString(8, bean.getCreatedBy());
+			pstmt.setString(9, bean.getModifiedBy());
+			pstmt.setTimestamp(10, bean.getCreatedDatetime());
+			pstmt.setTimestamp(11, bean.getModifiedDatetime());
 
 			pstmt.executeUpdate();
-			System.out.println("role added");
+			System.out.println("marksheet add");
+			conn.commit();
 			pstmt.close();
 		} catch (Exception e) {
-			  e.printStackTrace();
-	            log.error("Database Exception..", e);
-	            try {
+			 try {
 	                conn.rollback();
 	            } catch (Exception ex) {
+	                ex.printStackTrace();
 	                throw new ApplicationException(
 	                        "Exception : add rollback exception " + ex.getMessage());
 	            }
-	            throw new ApplicationException("Exception : Exception in add Role");
+	            throw new ApplicationException("Exception : Exception in add User");
+		
 		} finally {
 			JDBCDataSource.closeConnection(conn);
 		}
-		  log.debug("Model add End");
+
 		return pk;
 
 	}
@@ -104,17 +114,112 @@ public class RoleModel {
 	 * Delete.
 	 *
 	 * @param bean the bean
+	 * @throws ApplicationException 
 	 */
-	public void delete(RoleBean bean) {
-		System.out.println("Role Model Delete method");
+	public void delete(MarksheetBean bean) throws ApplicationException {
 		Connection conn = null;
 
 		try {
 			conn = JDBCDataSource.getConnection();
-			PreparedStatement pstmt = conn.prepareStatement("DELETE FROM st_role where ID=?");
+			conn.setAutoCommit(false);
+			PreparedStatement pstmt = conn.prepareStatement("delete from st_marksheet where ID=?");
+
 			pstmt.setLong(1, bean.getId());
 			pstmt.executeUpdate();
-			System.out.println("role deleted");
+			System.out.println("marksheet details deleted");
+			conn.commit();
+			pstmt.close();
+		} catch (Exception e) {
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+		
+		} finally {
+			JDBCDataSource.closeConnection(conn);
+		}
+
+	}
+
+	/**
+	 * Find by roll no.
+	 *
+	 * @param rollno the rollno
+	 * @return the marksheet bean
+	 */
+	public MarksheetBean findByRollNo(String rollno) {
+		Connection conn = null;
+		StringBuffer sql = new StringBuffer("SELECT * FROM st_marksheet where ROLL_NO=?");
+		MarksheetBean bean = null;
+
+		try {
+			conn = JDBCDataSource.getConnection();
+			PreparedStatement pstmt = conn.prepareStatement(sql.toString());
+			pstmt.setString(1, rollno);
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				bean = new MarksheetBean();
+				bean.setId(rs.getLong(1));
+				bean.setRollNo(rs.getString(2));
+				bean.setStudentId(rs.getLong(3));
+				bean.setName(rs.getString(4));
+				bean.setPhysics(rs.getInt(5));
+				bean.setChemistry(rs.getInt(6));
+				bean.setMaths(rs.getInt(7));
+				bean.setCreatedBy(rs.getString(8));
+				bean.setModifiedBy(rs.getString(9));
+				bean.setCreatedDatetime(rs.getTimestamp(10));
+				bean.setModifiedDatetime(rs.getTimestamp(11));
+			}
+			rs.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			JDBCDataSource.closeConnection(conn);
+		}
+
+		return bean;
+
+	}
+
+	/**
+	 * Update.
+	 *
+	 * @param bean the bean
+	 * @throws ApplicationException the application exception
+	 */
+	public void update(MarksheetBean bean) throws ApplicationException {
+		System.out.println("MarksheetModel Update");
+		
+		StudentModel stumodel=new StudentModel();
+		StudentBean stubean=stumodel.findByPK(bean.getStudentId());
+		bean.setName(stubean.getFirstName()+" "+stubean.getLastName());
+		Connection conn = null;
+
+		try {
+			conn = JDBCDataSource.getConnection();
+			conn.setAutoCommit(false);
+			PreparedStatement pstmt = conn.prepareStatement(
+					"update st_marksheet set ROLL_NO=?,STUDENT_ID=?,NAME=?,PHYSICS=?,CHEMISTRY=?,MATHS=?,CREATED_BY=?,MODIFIED_BY=?,CREATED_DATETIME=?,MODIFIED_DATETIME=? WHERE ID=?");
+			pstmt.setString(1, bean.getRollNo());
+			pstmt.setLong(2, bean.getStudentId());
+			pstmt.setString(3, bean.getName());
+			pstmt.setInt(4, bean.getPhysics());
+			pstmt.setInt(5, bean.getChemistry());
+			pstmt.setInt(6, bean.getMaths());
+			pstmt.setString(7, bean.getCreatedBy());
+			pstmt.setString(8, bean.getModifiedBy());
+			pstmt.setTimestamp(9, bean.getCreatedDatetime());
+			pstmt.setTimestamp(10, bean.getModifiedDatetime());
+			pstmt.setLong(11, bean.getId());
+
+			pstmt.executeUpdate();
+			System.out.println("marksheet updated");
+			conn.commit();
 			pstmt.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -126,82 +231,74 @@ public class RoleModel {
 	}
 
 	/**
-	 * Update.
-	 *
-	 * @param bean the bean
-	 */
-	public void update(RoleBean bean) {
-		Connection conn = null;
-		try {
-			conn = JDBCDataSource.getConnection();
-			PreparedStatement pstmt = conn.prepareStatement("update st_role SET NAME=? WHERE ID=?");
-			pstmt.setString(1, bean.getName());
-
-			pstmt.setLong(2, bean.getId());
-			pstmt.executeUpdate();
-			System.out.println("role updated");
-			pstmt.close();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-	}
-
-	/**
 	 * Find by PK.
 	 *
 	 * @param pk the pk
-	 * @return the role bean
+	 * @return the marksheet bean
 	 */
-	public RoleBean findByPK(long pk) {
+	public MarksheetBean findByPK(long pk) {
+		StringBuffer sql = new StringBuffer("select * from st_marksheet where ID=?");
+		MarksheetBean bean = null;
 		Connection conn = null;
-		RoleBean bean = null;
-		StringBuffer sql = new StringBuffer("SELECT * FROM ST_ROLE WHERE ID=?");
-
 		try {
 			conn = JDBCDataSource.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql.toString());
-
 			pstmt.setLong(1, pk);
 			ResultSet rs = pstmt.executeQuery();
 			while (rs.next()) {
-				bean = new RoleBean();
+				bean = new MarksheetBean();
 				bean.setId(rs.getLong(1));
-				bean.setName(rs.getString(2));
-				bean.setDescription(rs.getString(3));
-				bean.setCreatedBy(rs.getString(4));
-				bean.setModifiedBy(rs.getString(5));
-				bean.setCreatedDatetime(rs.getTimestamp(6));
-				bean.setModifiedDatetime(rs.getTimestamp(7));
+				bean.setRollNo(rs.getString(2));
+				bean.setStudentId(rs.getLong(3));
+				bean.setName(rs.getString(4));
+				bean.setPhysics(rs.getInt(5));
+				bean.setChemistry(rs.getInt(6));
+				bean.setMaths(rs.getInt(7));
+				bean.setCreatedBy(rs.getString(8));
+				bean.setModifiedBy(rs.getString(9));
+				bean.setCreatedDatetime(rs.getTimestamp(10));
+				bean.setModifiedDatetime(rs.getTimestamp(11));
+
 			}
 			rs.close();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			JDBCDataSource.closeConnection(conn);
 		}
 		return bean;
 
 	}
 
+	/**
+	 * List.
+	 *
+	 * @return the list
+	 * @throws ApplicationException the application exception
+	 */
 	/*public List list() {
 		ArrayList list = new ArrayList();
+		StringBuffer sql = new StringBuffer("select * from st_marksheet");
 		Connection conn = null;
-		StringBuffer sql = new StringBuffer("select * from st_role");
 
 		try {
 			conn = JDBCDataSource.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql.toString());
 			ResultSet rs = pstmt.executeQuery();
 			while (rs.next()) {
-				RoleBean bean = new RoleBean();
+				MarksheetBean bean = new MarksheetBean();
 				bean.setId(rs.getLong(1));
-				bean.setName(rs.getString(2));
-				bean.setDescription(rs.getString(3));
-				bean.setCreatedBy(rs.getString(4));
-				bean.setModifiedBy(rs.getString(5));
-				bean.setCreatedDatetime(rs.getTimestamp(6));
-				bean.setModifiedDatetime(rs.getTimestamp(7));
+				bean.setRollNo(rs.getString(2));
+				bean.setStudentId(rs.getLong(3));
+				bean.setName(rs.getString(4));
+				bean.setPhysics(rs.getInt(5));
+				bean.setChemistry(rs.getInt(6));
+				bean.setMaths(rs.getInt(7));
+				bean.setCreatedBy(rs.getString(8));
+				bean.setModifiedBy(rs.getString(9));
+				bean.setCreatedDatetime(rs.getTimestamp(10));
+				bean.setModifiedDatetime(rs.getTimestamp(11));
+
 				list.add(bean);
 			}
 			rs.close();
@@ -211,121 +308,124 @@ public class RoleModel {
 		} finally {
 			JDBCDataSource.closeConnection(conn);
 		}
+
 		return list;
 
 	}
 */
+	 public List list() throws ApplicationException {
+	        return list(0, 0);
+	    }
 
-    /**
-	 * List.
+	    /**
+    	 * get List of Marksheet with pagination.
+    	 *
+    	 * @param pageNo            : Current Page No.
+    	 * @param pageSize            : Size of Page
+    	 * @return list : List of Marksheets
+    	 * @throws ApplicationException the application exception
+    	 */
+
+	    public List list(int pageNo, int pageSize) throws ApplicationException {
+
+	        log.debug("Model  list Started");
+
+	        ArrayList list = new ArrayList();
+	        StringBuffer sql = new StringBuffer("select * from ST_MARKSHEET");
+	        // if page size is greater than zero then apply pagination
+	        if (pageSize > 0) {
+	            // Calculate start record index
+	            pageNo = (pageNo - 1) * pageSize;
+	            sql.append(" limit " + pageNo + "," + pageSize);
+	        }
+
+	        Connection conn = null;
+
+	        try {
+	            conn = JDBCDataSource.getConnection();
+	            PreparedStatement pstmt = conn.prepareStatement(sql.toString());
+	            ResultSet rs = pstmt.executeQuery();
+	            while (rs.next()) {
+	                MarksheetBean bean = new MarksheetBean();
+	                bean.setId(rs.getLong(1));
+	                bean.setRollNo(rs.getString(2));
+	                bean.setStudentId(rs.getLong(3));
+	                bean.setName(rs.getString(4));
+	                bean.setPhysics(rs.getInt(5));
+	                bean.setChemistry(rs.getInt(6));
+	                bean.setMaths(rs.getInt(7));
+	                bean.setCreatedBy(rs.getString(8));
+	                bean.setModifiedBy(rs.getString(9));
+	                bean.setCreatedDatetime(rs.getTimestamp(10));
+	                bean.setModifiedDatetime(rs.getTimestamp(11));
+	                list.add(bean);
+	            }
+	            rs.close();
+	        } catch (Exception e) {
+	            log.error(e);
+	            throw new ApplicationException(
+	                    "Exception in getting list of Marksheet");
+	        } finally {
+	            JDBCDataSource.closeConnection(conn);
+	        }
+
+	        log.debug("Model  list End");
+	        return list;
+
+	    }
+	
+	/**
+	 * Gets the merit list.
 	 *
-	 * @return the list
+	 * @param pageNo the page no
+	 * @param pageSize the page size
+	 * @return the merit list
 	 * @throws ApplicationException the application exception
 	 */
-	public List list() throws ApplicationException {
-        return list(0, 0);
-    }
+	public List getMeritList(int pageNo, int pageSize) throws ApplicationException {
+		 log.debug("Model  MeritList Started");
+		ArrayList list = new ArrayList();
+		StringBuffer sql = new StringBuffer(
+				"select ID,ROLL_NO,STUDENT_ID,NAME,PHYSICS,CHEMISTRY,MATHS,CREATED_BY,MODIFIED_BY,CREATED_DATETIME,MODIFIED_DATETIME,(PHYSICS+CHEMISTRY+MATHS) as total from st_marksheet order by total desc");
+		  if (pageSize > 0) {
+	            // Calculate start record index
+	            pageNo = (pageNo - 1) * pageSize;
+	            sql.append(" limit " + pageNo + "," + pageSize);
+	        }
+		Connection conn = null;
+		try {
+			conn = JDBCDataSource.getConnection();
+			PreparedStatement pstmt = conn.prepareStatement(sql.toString());
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				MarksheetBean bean = new MarksheetBean();
+				bean.setId(rs.getLong(1));
+				bean.setRollNo(rs.getString(2));
+				bean.setStudentId(rs.getLong(3));
+				bean.setName(rs.getString(4));
+				bean.setPhysics(rs.getInt(5));
+				bean.setChemistry(rs.getInt(6));
+				bean.setMaths(rs.getInt(7));
+				bean.setCreatedBy(rs.getString(8));
+				bean.setModifiedBy(rs.getString(9));
+				bean.setCreatedDatetime(rs.getTimestamp(10));
+				bean.setModifiedDatetime(rs.getTimestamp(11));
 
-    /**
-     * Get List of Role with pagination.
-     *
-     * @param pageNo            : Current Page No.
-     * @param pageSize            : Size of Page
-     * @return list : List of Role
-     * @throws ApplicationException the application exception
-     */
-
-    public List list(int pageNo, int pageSize) throws ApplicationException {
-        log.debug("Model list Started");
-        ArrayList list = new ArrayList();
-        StringBuffer sql = new StringBuffer("select * from ST_ROLE");
-        // if page size is greater than zero then apply pagination
-        if (pageSize > 0) {
-            // Calculate start record index
-            pageNo = (pageNo - 1) * pageSize;
-            sql.append(" limit " + pageNo + "," + pageSize);
-        }
-
-        Connection conn = null;
-
-        try {
-            conn = JDBCDataSource.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql.toString());
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-            
-                RoleBean bean = new RoleBean();
-                bean.setId(rs.getLong(1));
-                bean.setName(rs.getString(2));
-                bean.setDescription(rs.getString(3));
-                bean.setCreatedBy(rs.getString(4));
-                bean.setModifiedBy(rs.getString(5));
-                bean.setCreatedDatetime(rs.getTimestamp(6));
-                bean.setModifiedDatetime(rs.getTimestamp(7));
-                list.add(bean);
-            }
-            rs.close();
-        } catch (Exception e) {
-            log.error("Database Exception..", e);
+				list.add(bean);
+			}
+			rs.close();
+		} catch (Exception e) {
+            log.error(e);
             throw new ApplicationException(
-                    "Exception : Exception in getting list of Role");
+                    "Exception in getting merit list of Marksheet");
         } finally {
             JDBCDataSource.closeConnection(conn);
         }
-
-        log.debug("Model list End");
-        return list;
-
-    }
-	
-	/**
-	 * Find by name.
-	 *
-	 * @param name the name
-	 * @return the role bean
-	 */
-	public RoleBean findByName(String name) {
-		Connection conn = null;
-		RoleBean bean = null;
-		try {
-			conn = JDBCDataSource.getConnection();
-			PreparedStatement pstmt = conn.prepareStatement("select * from st_role where NAME=?");
-			pstmt.setString(1, name);
-			ResultSet rs = pstmt.executeQuery();
-			while (rs.next()) {
-				bean = new RoleBean();
-				bean.setId(rs.getLong(1));
-				bean.setName(rs.getString(2));
-				bean.setDescription(rs.getString(3));
-				bean.setCreatedBy(rs.getString(4));
-				bean.setModifiedBy(rs.getString(5));
-				bean.setCreatedDatetime(rs.getTimestamp(6));
-				bean.setModifiedDatetime(rs.getTimestamp(7));
-
-			}
-			rs.close();
-
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
-			JDBCDataSource.closeConnection(conn);
-		}
-		return bean;
+        log.debug("Model  MeritList End");
+		return list;
 
 	}
 
-	 /**
- 	 * Search.
- 	 *
- 	 * @param bean the bean
- 	 * @return the list
- 	 * @throws ApplicationException the application exception
- 	 */
- 	public List search(RoleBean bean) throws ApplicationException {
-	        return search(bean, 0, 0);
-	    }
-	
 	/**
 	 * Search.
 	 *
@@ -335,28 +435,34 @@ public class RoleModel {
 	 * @return the list
 	 * @throws ApplicationException the application exception
 	 */
-	public List search(RoleBean bean, int pageNo, int pageSize)
-            throws ApplicationException {
-        log.debug("Model search Started");
-        StringBuffer sql = new StringBuffer("SELECT * FROM st_role WHERE 1=1");
+	public List search(MarksheetBean bean, int pageNo, int pageSize) throws ApplicationException {
+          System.out.println("llllllll"+bean.getId());
+		log.debug("Model  search Started");
+		StringBuffer sql = new StringBuffer("select * from st_marksheet where true");
 
-        if (bean != null) {
-            if (bean.getId() > 0) {
-                sql.append(" AND ID = " + bean.getId());
-            }
-            if (bean.getName() != null && bean.getName().length() > 0) {
-                sql.append(" AND NAME like '" + bean.getName() + "%'");
-            }
-            if (bean.getDescription() != null
-                    && bean.getDescription().length() > 0) {
-                sql.append(" AND DESCRIPTION like '" + bean.getDescription()
-                        + "%'");
-            }
+		if (bean != null) {
+			System.out.println("service" + bean.getName());
+			if (bean.getId() > 0) {
+				sql.append(" AND ID = " + bean.getId());
+			}
+			if (bean.getRollNo() != null && bean.getRollNo().length() > 0) {
+				sql.append(" AND ROLL_NO like '" + bean.getRollNo() + "%'");
+			}
+			if (bean.getName() != null && bean.getName().length() > 0) {
+				sql.append(" AND NAME like '" + bean.getName() + "%'");
+			}
+			if(bean.getPhysics()>0){
+              sql.append(" AND PHYSICS=" +bean.getPhysics());				
+			}
+			if(bean.getChemistry()>0){
+				sql.append(" AND CHEMISTRY =" +bean.getChemistry());
+			}
+			if(bean.getMaths()>0){
+				sql.append(" AND MATHS ="+bean.getMaths());
+				
+			}
 
-        }
-
-        // if page size is greater than zero then apply pagination
-        if (pageSize > 0) {
+		} if (pageSize > 0) {
             // Calculate start record index
             pageNo = (pageNo - 1) * pageSize;
 
@@ -364,33 +470,49 @@ public class RoleModel {
             // sql.append(" limit " + pageNo + "," + pageSize);
         }
 
-        ArrayList list = new ArrayList();
-        Connection conn = null;
-        try {
-            conn = JDBCDataSource.getConnection();
-            PreparedStatement pstmt = conn.prepareStatement(sql.toString());
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                bean = new RoleBean();
-                bean.setId(rs.getLong(1));
-				bean.setName(rs.getString(2));
-				bean.setDescription(rs.getString(3));
-				bean.setCreatedBy(rs.getString(4));
-				bean.setModifiedBy(rs.getString(5));
-				bean.setCreatedDatetime(rs.getTimestamp(6));
-				bean.setModifiedDatetime(rs.getTimestamp(7));
-                list.add(bean);
-            }
-            rs.close();
-        } catch (Exception e) {
-            log.error("Database Exception..", e);
-            throw new ApplicationException(
-                    "Exception : Exception in search Role");
-        } finally {
-            JDBCDataSource.closeConnection(conn);
-        }
+        System.out.println("MarksheetModel :" +sql);
+		ArrayList list = new ArrayList();
+		Connection conn = null;
+		try {
+			conn = JDBCDataSource.getConnection();
+			PreparedStatement pstmt = conn.prepareStatement(sql.toString());
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				bean = new MarksheetBean();
+				bean.setId(rs.getLong(1));
+				bean.setRollNo(rs.getString(2));
+				bean.setStudentId(rs.getLong(3));
+				bean.setName(rs.getString(4));
+				bean.setPhysics(rs.getInt(5));
+				bean.setChemistry(rs.getInt(6));
+				bean.setMaths(rs.getInt(7));
+				bean.setCreatedBy(rs.getString(8));
+				bean.setModifiedBy(rs.getString(9));
+				bean.setCreatedDatetime(rs.getTimestamp(10));
+				bean.setModifiedDatetime(rs.getTimestamp(11));
+				list.add(bean);
+			}
+			rs.close();
+		} catch (Exception e) {
+			 log.error(e);
+	            throw new ApplicationException("Update rollback exception "
+	                    + e.getMessage());
+		} finally {
+			JDBCDataSource.closeConnection(conn);
+		}
+		 log.debug("Model  search End");
+		return list;
+	}
+	 
+ 	/**
+ 	 * Search.
+ 	 *
+ 	 * @param bean the bean
+ 	 * @return the list
+ 	 * @throws ApplicationException the application exception
+ 	 */
+ 	public List search(MarksheetBean bean) throws ApplicationException {
+	        return search(bean, 0, 0);
+	    }
 
-        log.debug("Model search End");
-        return list;
-    }
 }

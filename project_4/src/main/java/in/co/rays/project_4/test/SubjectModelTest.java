@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import in.co.rays.project_4.bean.SubjectBean;
+import in.co.rays.project_4.exception.ApplicationException;
 import in.co.rays.project_4.model.SubjectModel;
 
 /**
@@ -34,8 +35,9 @@ public class SubjectModelTest {
 	 * Test add.
 	 *
 	 * @throws SQLException the SQL exception
+	 * @throws ApplicationException 
 	 */
-	public static void testAdd() throws SQLException {
+	public static void testAdd() throws SQLException, ApplicationException {
 
 		SubjectBean bean = new SubjectBean();
 		bean.setCourseName("MTech");
@@ -59,7 +61,12 @@ public class SubjectModelTest {
 		SubjectBean bean = new SubjectBean();
 		bean.setId(1L);
 		SubjectModel model = new SubjectModel();
-		model.delete(bean);
+		try {
+			model.delete(bean);
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 
@@ -80,7 +87,12 @@ public class SubjectModelTest {
 		bean.setModifiedDatetime(null);
 
 		SubjectModel model = new SubjectModel();
-		model.Update(bean);
+		try {
+			model.Update(bean);
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 

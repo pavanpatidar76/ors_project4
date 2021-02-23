@@ -1,5 +1,6 @@
 package in.co.rays.project_4.test;
 
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -58,6 +59,9 @@ public class RoleModelTest {
 		} catch (ParseException e) {
 
 			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 	}
@@ -71,7 +75,12 @@ public class RoleModelTest {
 		bean.setId(id);
 
 		RoleModel model = new RoleModel();
-		model.delete(bean);
+		try {
+			model.delete(bean);
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	/**
@@ -84,7 +93,15 @@ public class RoleModelTest {
 		bean.setName("rohan");
 
 		RoleModel model = new RoleModel();
-		model.update(bean);
+		try {
+			model.update(bean);
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
 	}
 

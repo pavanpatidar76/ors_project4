@@ -64,8 +64,9 @@ public class SubjectModel {
 	 * @param bean the bean
 	 * @return the long
 	 * @throws SQLException the SQL exception
+	 * @throws ApplicationException 
 	 */
-	public long add(SubjectBean bean) throws SQLException {
+	public long add(SubjectBean bean) throws SQLException, ApplicationException {
 		log.debug("add debug started");
 
 		Connection conn = null;
@@ -79,6 +80,7 @@ public class SubjectModel {
 
 		System.out.println(pk);
 		try {
+			conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
 			StringBuffer sql = new StringBuffer("insert into st_subject values(?,?,?,?,?,?,?,?,?,?)");
 			PreparedStatement pstmt = conn.prepareStatement(sql.toString());
@@ -94,12 +96,21 @@ public class SubjectModel {
 			pstmt.setTimestamp(10, bean.getModifiedDatetime());
 
 			pstmt.executeUpdate();
+			conn.commit();
 			System.out.println("Subject Data added");
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+				} finally {
+			
 			JDBCDataSource.closeConnection(conn);
 		}
 		return pk;
@@ -110,8 +121,9 @@ public class SubjectModel {
 	 * Delete.
 	 *
 	 * @param bean the bean
+	 * @throws ApplicationException 
 	 */
-	public void delete(SubjectBean bean) {
+	public void delete(SubjectBean bean) throws ApplicationException {
 
 		log.debug("subjectModel delete stared");
 		Connection conn = null;
@@ -119,16 +131,26 @@ public class SubjectModel {
 		StringBuffer sql = new StringBuffer("Delete from st_subject where ID=?");
 
 		try {
+			conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(sql.toString());
 			pstmt.setLong(1, bean.getId());
 
 			pstmt.executeUpdate();
+
+			conn.commit();
 System.out.println("SubjectModel Delete:"+sql);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+				} finally {
 			JDBCDataSource.closeConnection(conn);
 		}
 		log.debug("SubjectModel data Deleted");
@@ -138,8 +160,9 @@ System.out.println("SubjectModel Delete:"+sql);
 	 * Update.
 	 *
 	 * @param bean the bean
+	 * @throws ApplicationException 
 	 */
-	public void Update(SubjectBean bean) {
+	public void Update(SubjectBean bean) throws ApplicationException {
 
 		CourseModel couModel = new CourseModel();
 
@@ -149,6 +172,7 @@ System.out.println("SubjectModel Delete:"+sql);
 
 		Connection conn = null;
 		try {
+			conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
 			StringBuffer sql = new StringBuffer(
 					"Update st_subject set COURSE_NAME=?,COURSE_ID=?,SUBJECT_NAME=?,SUBJECT_ID=?,DESCRIPTION=?,CREATED_BY=?,MODIFIED_BY=?,CREATED_DATETIME=?,MODIFIED_DATETIME=? where ID=?");
@@ -165,11 +189,19 @@ System.out.println("SubjectModel Delete:"+sql);
 			pstmt.setLong(10, bean.getId());
 
 			pstmt.executeUpdate();
-
+       conn.commit();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+			
+					} finally {
 			JDBCDataSource.closeConnection(conn);
 		}
 		log.debug("SubjectModel Data Updated");

@@ -195,7 +195,15 @@ try{
         bean.setModifiedDatetime(null);	
         bean.setId(2L);
         TimeTableModel model =new TimeTableModel();
-        model.update(bean);
+        try {
+			model.update(bean);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 	

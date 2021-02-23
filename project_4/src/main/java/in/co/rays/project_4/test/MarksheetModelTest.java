@@ -60,8 +60,9 @@ public class MarksheetModelTest {
 	
 	/**
 	 * Test delete.
+	 * @throws ApplicationException 
 	 */
-	public static void testDelete(){
+	public static void testDelete() throws ApplicationException{
 		MarksheetBean bean=new MarksheetBean();
 		bean.setId(1L);
 		

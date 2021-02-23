@@ -3,6 +3,7 @@ package in.co.rays.project_4.model;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,8 +56,9 @@ public class StudentModel {
 	 * @return the long
 	 * @throws DuplicateRecordsException the duplicate records exception
 	 * @throws ApplicationException the application exception
+	 * @throws Exception 
 	 */
-	public long add(StudentBean bean) throws DuplicateRecordsException, ApplicationException, Exception{
+	public long add(StudentBean bean) throws DuplicateRecordsException, ApplicationException, Exception {
 		
 		  log.debug("Model add Started");
 		  // get College Name
@@ -79,8 +81,8 @@ public class StudentModel {
 		Connection conn = null;
 		         System.out.println("<<");
 		try {
-                        conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
+			conn.setAutoCommit(false);
 			PreparedStatement pstmt = conn.prepareStatement("insert into st_student value(?,?,?,?,?,?,?,?,?,?,?,?) ");
 			System.out.println("<<<"+bean.getCollegeId()+""+bean.getDob()+""+nextPK());
 			pk = nextPK();
@@ -112,7 +114,7 @@ public class StudentModel {
             throw new ApplicationException(
                     "Exception : Exception in add Student");
         } finally {
-            conn.commit();
+        	conn.commit();
             JDBCDataSource.closeConnection(conn);
         }
         log.debug("Model add End");
@@ -132,11 +134,13 @@ public class StudentModel {
 		Connection conn = null;
 
 		try {
+			conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement("delete from st_student where ID=?");
 			pstmt.setLong(1, bean.getId());
 
 			pstmt.executeUpdate();
+			conn.commit();
 
 			System.out.println("Student record deleted");
 			pstmt.close();
@@ -152,6 +156,7 @@ public class StudentModel {
             throw new ApplicationException(
                     "Exception : Exception in delete Student");
         } finally {
+
             JDBCDataSource.closeConnection(conn);
         }
         log.debug("Model delete Started");

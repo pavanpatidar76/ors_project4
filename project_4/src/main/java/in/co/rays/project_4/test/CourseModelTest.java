@@ -60,7 +60,12 @@ public class CourseModelTest {
 		long id=6L;
 		bean.setId(id);
 		CourseModel model=new CourseModel();
-		model.delete(bean);
+		try {
+			model.delete(bean);
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -114,7 +119,12 @@ public class CourseModelTest {
 		bean.setCreatedDatetime(null);
 		bean.setModifiedDatetime(null);
 		CourseModel model= new CourseModel();
-		model.update(bean);
+		try {
+			model.update(bean);
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**

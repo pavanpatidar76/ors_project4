@@ -114,7 +114,8 @@ public class TimeTableModel {
 			conn=JDBCDataSource.getConnection();
 			conn.setAutoCommit(false);
 			pk=nextPk();
-			StringBuffer sql=new StringBuffer("insert into st_timetable values(?,?,?,?,?,?,?,?,?,?,?,?)");
+			StringBuffer sql=new StringBuffer("insert into st_timetable value(?,?,?,?,?,?,?,?,?,?,?,?)");
+
 			PreparedStatement pstmt=conn.prepareStatement(sql.toString());
 			  pstmt.setLong(1, pk);
 			  pstmt.setString(2, couname);
@@ -174,7 +175,15 @@ public class TimeTableModel {
 		     pstmt.executeUpdate();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+			
 		}finally {
 			conn.commit();
 			JDBCDataSource.closeConnection(conn);
@@ -359,8 +368,9 @@ public class TimeTableModel {
 	 *
 	 * @param bean the bean
 	 * @throws SQLException the SQL exception
+	 * @throws ApplicationException 
 	 */
-	public  void update(TimeTableBean bean) throws SQLException
+	public  void update(TimeTableBean bean) throws SQLException, ApplicationException
 	 {
 		 log.debug("update debug started");
 		 Connection conn=null;
@@ -400,8 +410,15 @@ public class TimeTableModel {
 		      			 } 
 			 catch (Exception e) 
 			 {
-			  e.printStackTrace();
-			 }
+				 try {
+		                conn.rollback();
+		            } catch (Exception ex) {
+		                ex.printStackTrace();
+		                throw new ApplicationException(
+		                        "Exception : add rollback exception " + ex.getMessage());
+		            }
+		            throw new ApplicationException("Exception : Exception in add User");
+							 }
 			 finally {
 			
 			 conn.commit();
@@ -522,7 +539,6 @@ public class TimeTableModel {
 		        conn.commit();
 				JDBCDataSource.closeConnection(conn);
 			}
-			System.out.println("TimetableModel Sql:"+sql);
 	log.debug("search debug completed");
 	return list;
 	 }
@@ -659,21 +675,4 @@ public class TimeTableModel {
 		 log.debug("findByCourseNameDate debug completed");
 	  return bean;	 
 	 }
-	 
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-
 }

@@ -13,6 +13,7 @@ import in.co.rays.project_4.bean.CollegeBean;
 import in.co.rays.project_4.bean.CourseBean;
 import in.co.rays.project_4.bean.FacultyBean;
 import in.co.rays.project_4.bean.SubjectBean;
+import in.co.rays.project_4.exception.ApplicationException;
 import in.co.rays.project_4.exception.DuplicateRecordsException;
 import in.co.rays.project_4.util.JDBCDataSource;
 
@@ -64,9 +65,10 @@ public class FacultyModel {
 	 * @return the long
 	 * @throws DuplicateRecordsException 
 	 * @throws SQLException 
+	 * @throws ApplicationException 
 	 */
 	
-	public long add(FacultyBean bean) throws DuplicateRecordsException, SQLException{
+	public long add(FacultyBean bean) throws DuplicateRecordsException, SQLException, ApplicationException{
 		
 		log.debug("Faculty model add method started");
 		Connection conn=null;
@@ -98,6 +100,7 @@ public class FacultyModel {
 			{
 		
 		try {
+			conn.setAutoCommit(false);
 			conn=JDBCDataSource.getConnection();
 			PreparedStatement pstmt= conn.prepareStatement("insert into st_faculty values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 			
@@ -121,11 +124,19 @@ public class FacultyModel {
             pstmt.setTimestamp(18, bean.getModifiedDatetime());
             
             pstmt.executeUpdate();
-		
+		conn.commit();
+		conn.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}finally {
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+			}finally {
 			JDBCDataSource.closeConnection(conn);
 		}
 			}
@@ -189,24 +200,34 @@ public class FacultyModel {
 	 * Delete.
 	 *
 	 * @param bean the bean
+	 * @throws ApplicationException 
 	 */
-	public void Delete(FacultyBean  bean) {
+	public void Delete(FacultyBean  bean) throws ApplicationException {
 		log.debug("Facultymodel Delete method started");
 		Connection conn=null;
 		StringBuffer sql= new StringBuffer("DELETE from st_faculty where ID=?");
 		
 		
-		try {
+		try {conn.setAutoCommit(false);
 			conn=JDBCDataSource.getConnection();
 		    PreparedStatement pstmt= conn.prepareStatement(sql.toString());
 		     pstmt.setLong(1, bean.getId());
 		     
 		     
 		     pstmt.executeUpdate();
+		     conn.commit();
 		     System.out.println("FacultyModel Data Deleted");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+		
 		}
 		log.debug("Facultymodel Deletemethod ended");
 		
@@ -218,8 +239,9 @@ public class FacultyModel {
 	 * Update.
 	 *
 	 * @param bean the bean
+	 * @throws ApplicationException 
 	 */
-	public void update(FacultyBean bean){
+	public void update(FacultyBean bean) throws ApplicationException{
 		log.debug("FacultyModel UpdateMethod started");
 		System.out.println("FacultyModel UpdateMethod started");
 		
@@ -229,6 +251,7 @@ public class FacultyModel {
 		
 		
 		try {
+			conn.setAutoCommit(false);
 			conn=JDBCDataSource.getConnection();
 			PreparedStatement pstmt= conn.prepareStatement(sql.toString());
 			
@@ -253,10 +276,19 @@ public class FacultyModel {
             
             
             pstmt.executeUpdate();
+            conn.close();
 					System.out.println("FacultyModel Data Updated");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+		
 		}
 		log.debug("facultyModel UpdateMethod ended");
 		

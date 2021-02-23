@@ -88,7 +88,12 @@ public class CollegeModelTest {
 		bean.setId(pk);
 		
 		CollegeModel model= new CollegeModel();
-		model.update(bean);
+		try {
+			model.update(bean);
+		} catch (ApplicationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**

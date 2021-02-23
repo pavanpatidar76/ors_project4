@@ -72,6 +72,7 @@ public class MarksheetModel {
         }
 		
 		try {
+			conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement("insert into st_marksheet values(?,?,?,?,?,?,?,?,?,?,?)");
 			pk = nextPK();
@@ -89,10 +90,18 @@ public class MarksheetModel {
 
 			pstmt.executeUpdate();
 			System.out.println("marksheet add");
+			conn.commit();
 			pstmt.close();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+		
 		} finally {
 			JDBCDataSource.closeConnection(conn);
 		}
@@ -105,8 +114,9 @@ public class MarksheetModel {
 	 * Delete.
 	 *
 	 * @param bean the bean
+	 * @throws ApplicationException 
 	 */
-	public void delete(MarksheetBean bean) {
+	public void delete(MarksheetBean bean) throws ApplicationException {
 		Connection conn = null;
 
 		try {
@@ -120,8 +130,15 @@ public class MarksheetModel {
 			conn.commit();
 			pstmt.close();
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+		
 		} finally {
 			JDBCDataSource.closeConnection(conn);
 		}

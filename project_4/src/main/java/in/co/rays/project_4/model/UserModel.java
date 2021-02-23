@@ -138,11 +138,13 @@ public class UserModel {
 	 * Delete.
 	 *
 	 * @param bean the bean
+	 * @throws ApplicationException 
 	 */
-	public void delete(UserBean bean) {
+	public void delete(UserBean bean) throws ApplicationException {
 		Connection conn = null;
 
 		try {
+			conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement("delete from st_user where ID=?");
 			pstmt.setLong(1, bean.getId());
@@ -150,11 +152,19 @@ public class UserModel {
 
 			System.out.println("user deleted");
 			pstmt.close();
+			conn.commit();
 
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} finally {
+			 try {
+	                conn.rollback();
+	            } catch (Exception ex) {
+	                ex.printStackTrace();
+	                throw new ApplicationException(
+	                        "Exception : add rollback exception " + ex.getMessage());
+	            }
+	            throw new ApplicationException("Exception : Exception in add User");
+					} finally {
 			JDBCDataSource.closeConnection(conn);
 		}
 
@@ -164,11 +174,13 @@ public class UserModel {
 	 * Update.
 	 *
 	 * @param bean the bean
+	 * @throws SQLException 
 	 */
-	public void update(UserBean bean) {
+	public void update(UserBean bean) throws SQLException {
 		Connection conn = null;
 
 		try {
+			conn.setAutoCommit(false);
 			conn = JDBCDataSource.getConnection();
 			PreparedStatement pstmt = conn.prepareStatement(
 					"update st_user set FIRST_NAME=? ,LAST_NAME=?,LOGIN=?,PASSWORD=?,DOB=?,MOBILE_NO=?,ROLE_ID=?,UNSUCCESSFUL_LOGIN=?,GENDER=?,LAST_LOGIN=?,USER_LOCK=?,REGISTERED_IP=?,LAST_LOGIN_IP=?,CREATED_BY=?,MODIFIED_BY=?,CREATED_DATETIME=?,MODIFIED_DATETIME=? where ID=?");
@@ -194,10 +206,18 @@ public class UserModel {
 			pstmt.executeUpdate();
 			System.out.println("user Updated");
 			pstmt.close();
+			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			try {
+                conn.rollback();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+                
+            }
 		} finally {
+			conn.commit();
 			JDBCDataSource.closeConnection(conn);
 		}
 
